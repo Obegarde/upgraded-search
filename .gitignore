@@ -1,0 +1,23 @@
+# Dependency directories
+node_modules/
+
+# Environment variables & secrets
+.env
+secrets.*          # Your secrets file
+*.key
+*.pem
+
+# Build/output directories
+dist/
+build/
+public/bundle.js    # If you're bundling client-side code
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS/editor files
+.DS_Store          # macOS
+.idea/             # JetBrains IDEs
+.vscode/           # VS Code
+*.swp              # Vim swap files

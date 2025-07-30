@@ -1,0 +1,25 @@
+{
+  "name": "upgraded-search",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build":"esbuild public/script.js --bundle --outfile=public/bundle.js" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Obegarde/upgraded-search.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Obegarde/upgraded-search/issues"
+  },
+  "homepage": "https://github.com/Obegarde/upgraded-search#readme",
+  "dependencies": {
+    "esbuild": "^0.25.8",
+    "express": "^5.1.0"
+  }
+}
