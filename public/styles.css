@@ -1,0 +1,10 @@
+body {
+  background-color: darkgrey;
+  text-align: center;
+  margin-top: 5%;
+}
+
+#search-input {
+  margin-top: 5%;
+  background-color: lightgrey;
+}
