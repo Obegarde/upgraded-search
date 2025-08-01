@@ -6,11 +6,13 @@ node_modules/
 secrets.*          # Your secrets file
 *.key
 *.pem
+secrets
 
 # Build/output directories
 dist/
 build/
 public/bundle.js    # If you're bundling client-side code
+bundle.js
 
 # Logs
 *.log
