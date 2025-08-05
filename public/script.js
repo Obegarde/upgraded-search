@@ -19,8 +19,29 @@ async function startSearch() {
   if (!response.ok) {
     searchResults.innerText = `status code:${response.status}`
   } else {
-    searchResults.innerText = await response.text();
+    const searchJSON = JSON.parse(await response.text())
+    for (let i = 0; i < 10 && i < searchJSON.length; i++) {
+      addResultDisplay(searchJSON[i], searchResults)
+    }
   }
+}
+
+function addResultDisplay(resultJSON, resultElement) {
+  const newLink = document.createElement('a')
+  newLink.setAttribute('href', resultJSON.url)
+  newLink.setAttribute('class', 'result')
+
+  const newHeading = document.createElement('h3')
+  const headingText = document.createTextNode(resultJSON.title)
+  newHeading.appendChild(headingText)
+
+  const newParagraph = document.createElement('p')
+  const paragraphText = document.createTextNode(resultJSON.description)
+  newParagraph.appendChild(paragraphText)
+
+  newLink.appendChild(newHeading)
+  newLink.appendChild(newParagraph)
+  resultElement.appendChild(newLink)
 }
 
 

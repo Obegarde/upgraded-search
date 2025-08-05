@@ -1,10 +1,42 @@
 body {
   background-color: darkgrey;
   text-align: center;
-  margin-top: 5%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+
 }
 
+.main {
+  grid-area: 1/2/6/5;
+}
+
+.left {
+  grid-area: 1/1/6/2;
+}
+
+.right {
+  grid-area: 1/5/6/6;
+}
+
+#search {
+  padding: 12px 0px;
+}
+
+
 #search-input {
-  margin-top: 5%;
+  margin: 12px 0px;
   background-color: lightgrey;
+}
+
+#search-results {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.result {
+  padding: 12px 0px;
 }
