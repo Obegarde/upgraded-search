@@ -20,8 +20,8 @@ async function startSearch() {
     searchResults.innerText = `status code:${response.status}`
   } else {
     const searchJSON = JSON.parse(await response.text())
-    for (let i = 0; i < 10 && i < searchJSON.length; i++) {
-      addResultDisplay(searchJSON[i], searchResults)
+    for (let i = 0; i < 10 && i < searchJSON.results.length; i++) {
+      addResultDisplay(searchJSON.results[i], searchResults)
     }
   }
 }
@@ -36,7 +36,7 @@ function addResultDisplay(resultJSON, resultElement) {
   newHeading.appendChild(headingText)
 
   const newParagraph = document.createElement('p')
-  const paragraphText = document.createTextNode(resultJSON.description)
+  const paragraphText = document.createTextNode(resultJSON.summary)
   newParagraph.appendChild(paragraphText)
 
   newLink.appendChild(newHeading)

@@ -1,27 +1,71 @@
 const { GoogleGenAI } = require('@google/genai');
+const { convert } = require('html-to-text')
 const express = require('express');
 const app = express();
-const ai = new GoogleGenAI();
+const GEMINI_API_KEY = process.env.gemini_key
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 app.use(express.static('public'));
 app.listen(3000, () => console.log('Server running'));
 app.get('/search', async (req, res) => {
   const searchKey = process.env.brave_key
   const searchJSON = await getWebSearchJSON(req, searchKey)
-  res.send(JSON.stringify(searchJSON.web.results))
+  const responseObject = { query: joinQuery(req) }
+  responseObject.results = await processSearchResults(searchJSON, joinQuery(req))
+  console.log(responseObject)
+  res.send(JSON.stringify(responseObject))
 });
 
-
-async function getAiSummary(pageText, searchQuery) {
+async function testAI() {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: pageText,
-    config: ai.types.generateContentConfig({ systemInstruction: "You are part of a search engine. You have to look at the page and give a recommendation on whether it is a good up to date resource for the given query. Give a summary and your verdict in 5 lines." })
+    model: 'gemini-2.0-flash',
+    contents:
+      'Search Query: why+is+the+sky+blue Result Text: Because of magic',
+    config: { systemInstruction: "You are part of a search engine. You have to look at the page and give a recommendation on whether it is an understandable,good, up to date resource for the given query. Give a summary and your verdict in 5 lines." },
   });
+
+  console.debug(response.text);
+}
+
+async function processSearchResults(searchResultsJSON, searchQuery) {
+  const amountOfResultsToProcess = searchResultsJSON.web.results.length;
+  const outputResults = []
+  for (let i = 0; i < amountOfResultsToProcess; i++) {
+    const resultObject = { url: searchResultsJSON.web.results[i].url, title: searchResultsJSON.web.results[i].title }
+    const webResponse = await fetch(searchResultsJSON.web.results[i].url);
+    if (!webResponse.ok) {
+      continue;
+    } else {
+      const webText = await webResponse.text()
+      const cleanText = convert(webText)
+      const aiResponse = getAiResponse(cleanText, searchQuery)
+      resultObject.summary = await aiResponse
+      console.log(aiResponse)
+      outputResults.push(resultObject)
+    }
+  }
+  return outputResults
+}
+
+
+
+
+
+async function getAiResponse(pageText, searchQuery) {
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.0-flash',
+    contents: `Search Query:${searchQuery} Result Text:${pageText}`,
+    config: { systemInstruction: "You are part of a search engine. Give a short summary of the page and give a recommendation on whether it is up to date and worthwhile resource for the given query. Give your verdict in 5 lines. Do not add any formatting to your response." },
+  });
+  return response.text
+}
+
+function joinQuery(req) {
+  return req.query['query'].split(',').join('+')
 }
 
 function createURL(req) {
-  const queryJoined = req.query['query'].split(',').join('+')
+  const queryJoined = joinQuery(req)
   const url = `https://api.search.brave.com/res/v1/web/search?q=${queryJoined}&count=5`
   return url
 }
