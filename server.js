@@ -8,11 +8,11 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 app.use(express.static('public'));
 app.listen(3000, () => console.log('Server running'));
 app.get('/search', async (req, res) => {
+  console.log(req.query)
   const searchKey = process.env.brave_key
   const searchJSON = await getWebSearchJSON(req, searchKey)
-  const responseObject = { query: joinQuery(req) }
-  responseObject.results = await processSearchResults(searchJSON, joinQuery(req))
-  console.log(responseObject)
+  const responseObject = { query: fixQuery(req) }
+  responseObject.results = await processSearchResults(searchJSON, fixQuery(req))
   res.send(JSON.stringify(responseObject))
 });
 
@@ -36,7 +36,6 @@ async function processSearchResults(searchResultsJSON, searchQuery) {
       const webResponse = await fetch(searchResultsJSON.web.results[i].url);
       const webText = await webResponse.text()
       const cleanText = convert(webText, { selectors: [{ selector: 'header', format: 'skip' }, { selector: 'footer', format: 'skip' }] })
-      console.log(cleanText)
       try {
         const aiResponseText = await getAiResponseText(cleanText, searchQuery)
         resultObject.summary = aiResponseText
@@ -54,12 +53,7 @@ async function processSearchResults(searchResultsJSON, searchQuery) {
   return outputResults
 }
 
-
-
-
-
 async function getAiResponseText(pageText, searchQuery) {
-  throw new Error('test')
   const response = await ai.models.generateContent({
     model: 'gemini-2.0-flash',
     contents: `Search Query:${searchQuery} Result Text:${pageText}`,
@@ -68,13 +62,13 @@ async function getAiResponseText(pageText, searchQuery) {
   return response.text
 }
 
-function joinQuery(req) {
-  return req.query['query'].split(',').join('+')
+
+function fixQuery(req) {
+  return req.query.q.split(' ').join('+')
 }
 
 function createURL(req) {
-  const queryJoined = joinQuery(req)
-  const url = `https://api.search.brave.com/res/v1/web/search?q=${queryJoined}&count=5`
+  const url = `https://api.search.brave.com/res/v1/web/search?q=${fixQuery(req)}&count=5`
   return url
 }
 function createHeader(key) {

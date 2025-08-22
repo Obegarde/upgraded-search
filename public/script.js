@@ -1,47 +1,75 @@
+main();
 
-const searchInput = document.querySelector('#search-input');
-const searchButton = document.querySelector('#search-button');
-const searchResults = document.querySelector('#search-results');
-searchInput.select()
-searchButton.addEventListener("click", startSearch)
-searchInput.addEventListener("keydown", (event) => {
-  if (event.key == 'Enter') {
-    startSearch()
-  }
-});
-
-async function startSearch() {
-  console.log('button clicked')
-  const searchParams = new URLSearchParams({ query: searchInput.value.split(' ') }).toString();
-  const url = `http://localhost:3000/search?${searchParams}`
-  const response = await fetch(url)
-  console.log(response)
-  if (!response.ok) {
-    searchResults.innerText = `status code:${response.status}`
-  } else {
-    const searchJSON = JSON.parse(await response.text())
-    for (let i = 0; i < 10 && i < searchJSON.results.length; i++) {
-      addResultDisplay(searchJSON.results[i], searchResults)
-    }
+function main() {
+  const currentPage = document.body.dataset.page;
+  if (currentPage === 'serp') {
+    const resultElements = document.querySelectorAll('.serp__result');
+    console.log(resultElements.length)
+    const urlParams = new URLSearchParams(window.location.search)
+    const searchInput = urlParams.get('q')
+    startSearch(resultElements, searchInput)
   }
 }
 
-function addResultDisplay(resultJSON, resultElement) {
-  const newLink = document.createElement('a')
-  newLink.setAttribute('href', resultJSON.url)
-  newLink.setAttribute('class', 'result')
+function hashSearchInput(searchInputValue) {
+  let hash = 0;
+  for (let i = 0; i < searchInputValue.length; i++) {
+    hash += searchInputValue.charCodeAt(i)
+  }
+  return hash % 64
+}
 
-  const newHeading = document.createElement('h3')
-  const headingText = document.createTextNode(resultJSON.title)
-  newHeading.appendChild(headingText)
+function addToLocalStorage(searchInputValue, result) {
+  console.log(`add:${searchInputValue}`)
+  const hashedInput = hashSearchInput(searchInputValue)
+  localStorage.setItem(hashedInput, result)
+}
 
-  const newParagraph = document.createElement('p')
-  const paragraphText = document.createTextNode(resultJSON.summary)
-  newParagraph.appendChild(paragraphText)
+function getFromLocalStorage(searchInputValue) {
+  console.log(`get: ${searchInputValue}`)
+  const hashedInput = hashSearchInput(searchInputValue)
+  const itemFromStorage = JSON.parse(localStorage.getItem(hashedInput))
+  console.log(itemFromStorage)
+  return itemFromStorage
+}
 
-  newLink.appendChild(newHeading)
-  newLink.appendChild(newParagraph)
-  resultElement.appendChild(newLink)
+
+function hideElements(elements) {
+  elements.every((element) => element.style.display = 'none')
+}
+
+async function startSearch(resultElements, searchInput) {
+  console.log('search initiated')
+  const cachedResult = getFromLocalStorage(searchInput)
+  console.log(cachedResult)
+  if (cachedResult == null) {
+    const url = `http://localhost:3000/search?q=${searchInput}`
+    const response = await fetch(url)
+    console.log(response)
+    if (!response.ok) {
+      hideElements(resultElements)
+    } else {
+      const searchText = await response.text()
+      addToLocalStorage(searchInput, searchText)
+      document.querySelector('.serp__no-results').style.display = 'none';
+      addResultDisplay(JSON.parse(searchText), resultElements)
+
+    }
+  } else {
+    addResultDisplay(cachedResult, resultElements)
+    document.querySelector('.serp__no-results').style.display = 'none';
+  }
+
+}
+
+function addResultDisplay(resultsJSON, resultElements) {
+  for (let i = 0; i < resultElements.length; i++) {
+    const currentResult = resultsJSON.results[i]
+    resultElements[i].querySelector('a').setAttribute('href', currentResult.url);
+    resultElements[i].querySelector('.serp__title').innerText = currentResult.title;
+    resultElements[i].querySelector('.serp__url').innerText = currentResult.url;
+    resultElements[i].querySelector('.serp__description').innerText = currentResult.summary;
+  }
 }
 
 
